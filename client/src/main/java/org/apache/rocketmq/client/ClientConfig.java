@@ -109,6 +109,7 @@ public class ClientConfig {
 
     public void changeInstanceNameToPID() {
         if (this.instanceName.equals("DEFAULT")) {
+            // 代表当前 Producer 实例的名称
             this.instanceName = UtilAll.getPid() + "#" + System.nanoTime();
         }
     }

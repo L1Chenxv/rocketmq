@@ -46,11 +46,14 @@ public class MQClientManager {
 
     public MQClientInstance getOrCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
         String clientId = clientConfig.buildMQClientId();
+        // 从这个 table 里先获取一次
         MQClientInstance instance = this.factoryTable.get(clientId);
+        // 第一次进来, table 肯定没有数据, 所以它一定是 null
         if (null == instance) {
             instance =
                 new MQClientInstance(clientConfig.cloneClientConfig(),
                     this.factoryIndexGenerator.getAndIncrement(), clientId, rpcHook);
+            // 生成好之后就会写入 factoryTable 中, 所以后续再次调用这个方法就能够获取到了
             MQClientInstance prev = this.factoryTable.putIfAbsent(clientId, instance);
             if (prev != null) {
                 instance = prev;

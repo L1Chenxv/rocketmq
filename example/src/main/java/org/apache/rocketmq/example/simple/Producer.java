@@ -27,6 +27,7 @@ public class Producer {
 
         DefaultMQProducer producer = new DefaultMQProducer("ProducerGroupName");
         producer.setNamesrvAddr("127.0.0.1:9876");
+        //调用依赖组件的start方法（初始化）
         producer.start();
 
         for (int i = 0; i < 128; i++)

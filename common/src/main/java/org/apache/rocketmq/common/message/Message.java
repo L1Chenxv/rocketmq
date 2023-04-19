@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Message implements Serializable {
+
     private static final long serialVersionUID = 8445773977080406428L;
 
     private String topic;
@@ -44,13 +45,17 @@ public class Message implements Serializable {
         this.body = body;
 
         if (tags != null && tags.length() > 0) {
+            // 放入properties中
             this.setTags(tags);
         }
 
         if (keys != null && keys.length() > 0) {
+            // 放入properties中
             this.setKeys(keys);
         }
 
+        // waitStoreMsgOK 表示是否要在这条 Message 落到磁盘上之后
+        // 才返回应答这里该变量的值默认为 true
         this.setWaitStoreMsgOK(waitStoreMsgOK);
     }
 
