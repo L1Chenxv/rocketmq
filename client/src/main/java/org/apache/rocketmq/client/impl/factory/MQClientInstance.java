@@ -666,6 +666,7 @@ public class MQClientInstance {
                                 }
                             }
                             log.info("topicRouteTable.put. Topic = {}, TopicRouteData[{}]", topic, cloneTopicRouteData);
+                            // 路由信息放入topicRouteTable中
                             this.topicRouteTable.put(topic, cloneTopicRouteData);
                             return true;
                         }

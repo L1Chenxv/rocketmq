@@ -115,6 +115,7 @@ public class ClientConfig {
     }
 
     public String withNamespace(String resource) {
+        // 拼接命名空间
         return NamespaceUtil.wrapNamespace(this.getNamespace(), resource);
     }
 
