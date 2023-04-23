@@ -236,6 +236,7 @@ public class MQClientInstance {
                     // Start request-response channel
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
+                    // 启动定时任务 核心方法
                     this.startScheduledTask();
                     // Start pull service
                     this.pullMessageService.start();
@@ -244,6 +245,7 @@ public class MQClientInstance {
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
                     log.info("the client factory [{}] start OK", this.clientId);
+                    // 状态设置为 RUNNING
                     this.serviceState = ServiceState.RUNNING;
                     break;
                 case START_FAILED:
@@ -274,6 +276,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 更新 Topic 路由信息
                     MQClientInstance.this.updateTopicRouteInfoFromNameServer();
                 } catch (Exception e) {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
@@ -286,6 +289,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 发送心跳 清理离线的 Broker
                     MQClientInstance.this.cleanOfflineBroker();
                     MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
                 } catch (Exception e) {
@@ -299,6 +303,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
+                    // 持久化 offset
                     MQClientInstance.this.persistAllConsumerOffset();
                 } catch (Exception e) {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);

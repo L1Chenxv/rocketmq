@@ -20,6 +20,7 @@ package org.apache.rocketmq.client.common;
 import java.util.Random;
 
 public class ThreadLocalIndex {
+    // 存储线程内部的计数器
     private final ThreadLocal<Integer> threadLocalIndex = new ThreadLocal<Integer>();
     private final Random random = new Random();
     private final static int POSITIVE_MASK = 0x7FFFFFFF;
