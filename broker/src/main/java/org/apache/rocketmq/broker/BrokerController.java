@@ -243,6 +243,7 @@ public class BrokerController {
     public boolean initialize() throws CloneNotSupportedException {
         boolean result = this.topicConfigManager.load();
 
+        // 加载consumerOffsetManager、subscriptionGroupManager、consumerFilterManager 每个Manager对应磁盘上的一个文件
         result = result && this.consumerOffsetManager.load();
         result = result && this.subscriptionGroupManager.load();
         result = result && this.consumerFilterManager.load();

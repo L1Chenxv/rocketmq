@@ -112,10 +112,12 @@ public class BrokerStartup {
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
 
-            if (commandLine.hasOption('c')) {
+            if (commandLine.hasOption('c')) { // -c
                 String file = commandLine.getOptionValue('c');
                 if (file != null) {
                     configFile = file;
+
+                    // 解析到相应的配置文件
                     InputStream in = new BufferedInputStream(new FileInputStream(file));
                     properties = new Properties();
                     properties.load(in);
@@ -143,6 +145,7 @@ public class BrokerStartup {
                 try {
                     String[] addrArray = namesrvAddr.split(";");
                     for (String addr : addrArray) {
+                        // 校验地址是否合法
                         RemotingUtil.string2SocketAddress(addr);
                     }
                 } catch (Exception e) {
@@ -209,20 +212,24 @@ public class BrokerStartup {
             MixAll.printObjectProperties(log, nettyClientConfig);
             MixAll.printObjectProperties(log, messageStoreConfig);
 
+            // 实例化 BrokerController
             final BrokerController controller = new BrokerController(
                 brokerConfig,
                 nettyServerConfig,
                 nettyClientConfig,
                 messageStoreConfig);
+            // 记得注册配置
             // remember all configs to prevent discard
             controller.getConfiguration().registerConfig(properties);
 
+            // 初始化
             boolean initResult = controller.initialize();
             if (!initResult) {
                 controller.shutdown();
                 System.exit(-3);
             }
 
+            // 添加关闭钩子
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 private volatile boolean hasShutdown = false;
                 private AtomicInteger shutdownTimes = new AtomicInteger(0);
