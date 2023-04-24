@@ -55,7 +55,9 @@ public class MQFaultStrategy {
         this.sendLatencyFaultEnable = sendLatencyFaultEnable;
     }
 
+    // 线性轮询的负载均衡算法
     public MessageQueue selectOneMessageQueue(final TopicPublishInfo tpInfo, final String lastBrokerName) {
+        // 如果开启了发送延迟容错 (默认是关闭的)
         if (this.sendLatencyFaultEnable) {
             try {
                 // 得到当前线程的索引

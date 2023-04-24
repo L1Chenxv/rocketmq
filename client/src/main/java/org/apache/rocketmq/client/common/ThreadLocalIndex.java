@@ -27,7 +27,8 @@ public class ThreadLocalIndex {
 
     public int incrementAndGet() {
         Integer index = this.threadLocalIndex.get();
-        if (null == index) {
+        if (null == index) { // 首次进入
+            // 第一次进入，随机初始化一个值
             index = Math.abs(random.nextInt());
             this.threadLocalIndex.set(index);
         }

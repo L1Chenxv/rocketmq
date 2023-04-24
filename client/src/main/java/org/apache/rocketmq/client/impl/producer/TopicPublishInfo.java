@@ -67,7 +67,7 @@ public class TopicPublishInfo {
     }
 
     public MessageQueue selectOneMessageQueue(final String lastBrokerName) {
-        if (lastBrokerName == null) {
+        if (lastBrokerName == null) { // lastBrokerName 只会在重试的时候才会有值
             return selectOneMessageQueue();
         } else {
             for (int i = 0; i < this.messageQueueList.size(); i++) {
@@ -80,6 +80,7 @@ public class TopicPublishInfo {
                     return mq;
                 }
             }
+            // 如果所有的队列都是上次发送的 brokerName，那么就随机选择一个
             return selectOneMessageQueue();
         }
     }
