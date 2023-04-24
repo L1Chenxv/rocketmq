@@ -27,23 +27,23 @@ import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 
 public class SendMessageRequestHeader implements CommandCustomHeader {
     @CFNotNull
-    private String producerGroup;
+    private String producerGroup; // 生产者组
     @CFNotNull
-    private String topic;
+    private String topic; // 主题
     @CFNotNull
-    private String defaultTopic;
+    private String defaultTopic; // 默认主题
     @CFNotNull
-    private Integer defaultTopicQueueNums;
+    private Integer defaultTopicQueueNums; // 默认主题队列数,值为4 -> 针对自动创建的topic
     @CFNotNull
-    private Integer queueId;
+    private Integer queueId; // 当前消息投递的目标队列的编号
     @CFNotNull
-    private Integer sysFlag;
+    private Integer sysFlag; // 系统标志位，例如当前Message是否被压缩过
     @CFNotNull
-    private Long bornTimestamp;
+    private Long bornTimestamp; // 消息的生产时间戳
     @CFNotNull
     private Integer flag;
     @CFNullable
-    private String properties;
+    private String properties; // 消息的属性
     @CFNullable
     private Integer reconsumeTimes;
     @CFNullable
