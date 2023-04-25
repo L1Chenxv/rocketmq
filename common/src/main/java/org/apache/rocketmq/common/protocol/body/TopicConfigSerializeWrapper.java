@@ -26,6 +26,7 @@ import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 public class TopicConfigSerializeWrapper extends RemotingSerializable {
     private ConcurrentMap<String, TopicConfig> topicConfigTable =
         new ConcurrentHashMap<String, TopicConfig>();
+    // 两个字段：上次更新的时间戳和更新次数 -> 数据详情和数据版本
     private DataVersion dataVersion = new DataVersion();
 
     public ConcurrentMap<String, TopicConfig> getTopicConfigTable() {

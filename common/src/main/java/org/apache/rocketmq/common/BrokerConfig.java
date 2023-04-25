@@ -152,11 +152,13 @@ public class BrokerConfig {
 
     private boolean compressedRegister = false;
 
+    // 配置文件中不存在则默认为true
     private boolean forceRegister = true;
 
     /**
      * This configurable item defines interval of topics registration of broker to name server. Allowing values are
      * between 10, 000 and 60, 000 milliseconds.
+     * 默认心跳间隔30s
      */
     private int registerNameServerPeriod = 1000 * 30;
 
