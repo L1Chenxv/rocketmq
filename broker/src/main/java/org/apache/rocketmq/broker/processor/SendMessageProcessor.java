@@ -84,6 +84,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
 
     @Override
     public void asyncProcessRequest(ChannelHandlerContext ctx, RemotingCommand request, RemotingResponseCallback responseCallback) throws Exception {
+        // 异步处理是 Broker 内部处理消息的方式
         asyncProcessRequest(ctx, request).thenAcceptAsync(responseCallback::callback, this.brokerController.getPutMessageFutureExecutor());
     }
 
@@ -324,6 +325,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
             }
             putMessageResult = this.brokerController.getTransactionalMessageService().asyncPrepareMessage(msgInner);
         } else {
+            // 使用 MessageStore 写入数据
             putMessageResult = this.brokerController.getMessageStore().asyncPutMessage(msgInner);
         }
         return handlePutMessageResultFuture(putMessageResult, response, request, msgInner, responseHeader, mqtraceContext, ctx, queueIdInt);
