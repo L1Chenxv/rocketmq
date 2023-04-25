@@ -59,7 +59,7 @@ public class BrokerStartup {
 
     public static BrokerController start(BrokerController controller) {
         try {
-
+            // 启动BrokerController
             controller.start();
 
             String tip = "The broker[" + controller.getBrokerConfig().getBrokerName() + ", "
@@ -140,6 +140,7 @@ public class BrokerStartup {
                 System.exit(-2);
             }
 
+            // 得到 namesrvAddr
             String namesrvAddr = brokerConfig.getNamesrvAddr();
             if (null != namesrvAddr) {
                 try {
@@ -222,14 +223,14 @@ public class BrokerStartup {
             // remember all configs to prevent discard
             controller.getConfiguration().registerConfig(properties);
 
-            // 初始化
+            // 初始化 BrokerController
             boolean initResult = controller.initialize();
             if (!initResult) {
                 controller.shutdown();
                 System.exit(-3);
             }
 
-            // 添加关闭钩子
+            // 添加关闭钩子函数
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 private volatile boolean hasShutdown = false;
                 private AtomicInteger shutdownTimes = new AtomicInteger(0);
