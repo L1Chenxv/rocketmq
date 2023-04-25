@@ -251,6 +251,7 @@ public class MappedFileQueue {
         return getLastMappedFile(startOffset, true);
     }
 
+    // 获取当前正在写的文件
     public MappedFile getLastMappedFile() {
         MappedFile mappedFileLast = null;
 

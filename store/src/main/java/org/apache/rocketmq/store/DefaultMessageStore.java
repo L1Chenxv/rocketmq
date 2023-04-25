@@ -446,6 +446,7 @@ public class DefaultMessageStore implements MessageStore {
 
     @Override
     public CompletableFuture<PutMessageResult> asyncPutMessage(MessageExtBrokerInner msg) {
+        // 检查消息存储状态
         PutMessageStatus checkStoreStatus = this.checkStoreStatus();
         if (checkStoreStatus != PutMessageStatus.PUT_OK) {
             return CompletableFuture.completedFuture(new PutMessageResult(checkStoreStatus, null));
@@ -463,6 +464,8 @@ public class DefaultMessageStore implements MessageStore {
 
 
         long beginTime = this.getSystemClock().now();
+        // 异步写入消息到commitLog
+        // 磁盘顺序写
         CompletableFuture<PutMessageResult> putResultFuture = this.commitLog.asyncPutMessage(msg);
 
         putResultFuture.thenAccept(result -> {

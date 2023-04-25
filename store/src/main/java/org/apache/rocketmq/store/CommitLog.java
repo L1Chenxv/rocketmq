@@ -664,6 +664,7 @@ public class CommitLog {
 
         putMessageLock.lock(); //spin or ReentrantLock ,depending on store config
         try {
+            // 一个 MappedFile 就对应了磁盘上的一个文件 是对广义上的磁盘文件所实现的内存映射文件
             MappedFile mappedFile = this.mappedFileQueue.getLastMappedFile();
             long beginLockTimestamp = this.defaultMessageStore.getSystemClock().now();
             this.beginTimeInLock = beginLockTimestamp;
