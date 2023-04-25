@@ -197,18 +197,21 @@ public class MappedFileQueue {
         return 0;
     }
 
+    // 这里的 startOffset 就是上面 getLastMappedFile(0) 当中的 0
     public MappedFile getLastMappedFile(final long startOffset, boolean needCreate) {
         long createOffset = -1;
         MappedFile mappedFileLast = getLastMappedFile();
 
         if (mappedFileLast == null) {
+            // 由于 startOffset 传入的是 0, 那么这里的 createOffset 算出来也是 0
             createOffset = startOffset - (startOffset % this.mappedFileSize);
         }
-
+        // 如果 mappedFileLast 不为空, 并且 mappedFileLast 已经满了, 那么就需要创建新的 MappedFile
         if (mappedFileLast != null && mappedFileLast.isFull()) {
+            // 更新 createOffset
             createOffset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         }
-
+        // 调用核心方法, 创建 MappedFile
         if (createOffset != -1 && needCreate) {
             return tryCreateMappedFile(createOffset);
         }
@@ -217,7 +220,14 @@ public class MappedFileQueue {
     }
 
     protected MappedFile tryCreateMappedFile(long createOffset) {
+        // storePath 是 RocketMQ 存储消息的根目录
+        // 比如说, 我们配置的存储路径是 /Users/chenhao/develop/rocketmq/store/commitlog, 那么这里的 storePath
+        // 就是 /Users/chenhao/develop/rocketmq/store/commitlog
+
+        // /Users/leonsh/rocketmqnamesrv/data/commitlog/00000000000000000000
         String nextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset);
+        // 代表当前这个文件写满之后的下一个文件，Broker 会预生成下一个 CommitLog 文件
+        // /Users/leonsh/rocketmqnamesrv/data/commitlog/00000000001073741824
         String nextNextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset
                 + this.mappedFileSize);
         return doCreateMappedFile(nextFilePath, nextNextFilePath);
