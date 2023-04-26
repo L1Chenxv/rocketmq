@@ -56,7 +56,7 @@ public class AllocateMappedFileService extends ServiceThread {
                 canSubmitRequests = this.messageStore.getTransientStorePool().availableBufferNums() - this.requestQueue.size();
             }
         }
-
+        // 创造请求
         AllocateRequest nextReq = new AllocateRequest(nextFilePath, fileSize);
         boolean nextPutOK = this.requestTable.putIfAbsent(nextFilePath, nextReq) == null;
 
@@ -67,13 +67,14 @@ public class AllocateMappedFileService extends ServiceThread {
                 this.requestTable.remove(nextFilePath);
                 return null;
             }
+            // 放入队列
             boolean offerOK = this.requestQueue.offer(nextReq);
             if (!offerOK) {
                 log.warn("never expected here, add a request to preallocate queue failed");
             }
             canSubmitRequests--;
         }
-
+        //预分配下一个文件
         AllocateRequest nextNextReq = new AllocateRequest(nextNextFilePath, fileSize);
         boolean nextNextPutOK = this.requestTable.putIfAbsent(nextNextFilePath, nextNextReq) == null;
         if (nextNextPutOK) {
@@ -82,6 +83,7 @@ public class AllocateMappedFileService extends ServiceThread {
                     "RequestQueueSize : {}, StorePoolSize: {}", this.requestQueue.size(), this.messageStore.getTransientStorePool().availableBufferNums());
                 this.requestTable.remove(nextNextFilePath);
             } else {
+                // 预分配下一个文件
                 boolean offerOK = this.requestQueue.offer(nextNextReq);
                 if (!offerOK) {
                     log.warn("never expected here, add a request to preallocate queue failed");
@@ -141,12 +143,16 @@ public class AllocateMappedFileService extends ServiceThread {
     }
 
     /**
+     * 自产自销 异步解耦
      * Only interrupted by the external thread, will return false
+     * 只有被外部线程中断，才会返回false
+     * @return true if success, false if interrupted
      */
     private boolean mmapOperation() {
         boolean isSuccess = false;
         AllocateRequest req = null;
         try {
+            // 从队列中消费一个请求
             req = this.requestQueue.take();
             AllocateRequest expectedRequest = this.requestTable.get(req.getFilePath());
             if (null == expectedRequest) {
@@ -173,6 +179,8 @@ public class AllocateMappedFileService extends ServiceThread {
                         mappedFile = new MappedFile(req.getFilePath(), req.getFileSize(), messageStore.getTransientStorePool());
                     }
                 } else {
+                    // 检查目录是否存在，不存在则创建
+                    // 创建MappedFile
                     mappedFile = new MappedFile(req.getFilePath(), req.getFileSize());
                 }
 

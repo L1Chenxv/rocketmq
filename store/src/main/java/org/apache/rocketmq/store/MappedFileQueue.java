@@ -237,6 +237,7 @@ public class MappedFileQueue {
         MappedFile mappedFile = null;
 
         if (this.allocateMappedFileService != null) {
+            // 实际的文件创建是由 putRequestAndReturnMappedFile 来执行的
             mappedFile = this.allocateMappedFileService.putRequestAndReturnMappedFile(nextFilePath,
                     nextNextFilePath, this.mappedFileSize);
         } else {
@@ -251,6 +252,8 @@ public class MappedFileQueue {
             if (this.mappedFiles.isEmpty()) {
                 mappedFile.setFirstCreateInQueue(true);
             }
+            // 这里只是负责把由 allocateMappedFileService 创建好
+            // 的 mappedFile 添加到 mappedFileQueue 当中管理起来
             this.mappedFiles.add(mappedFile);
         }
 
@@ -497,6 +500,7 @@ public class MappedFileQueue {
                         this.mappedFileSize,
                         this.mappedFiles.size());
                 } else {
+                    // 根据 offset 和当前 MappedFile 的起始偏移量来计算出对应的 MappedFile 文件在 MappedFileQueue 当中的下标
                     int index = (int) ((offset / this.mappedFileSize) - (firstMappedFile.getFileFromOffset() / this.mappedFileSize));
                     MappedFile targetFile = null;
                     try {
@@ -506,9 +510,11 @@ public class MappedFileQueue {
 
                     if (targetFile != null && offset >= targetFile.getFileFromOffset()
                         && offset < targetFile.getFileFromOffset() + this.mappedFileSize) {
+                        // 如果找到了，直接返回
                         return targetFile;
                     }
 
+                    // 兜底方案，遍历 MappedFile 集合，根据 offset 来查找对应的 MappedFile 文件
                     for (MappedFile tmpMappedFile : this.mappedFiles) {
                         if (offset >= tmpMappedFile.getFileFromOffset()
                             && offset < tmpMappedFile.getFileFromOffset() + this.mappedFileSize) {
