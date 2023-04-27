@@ -31,7 +31,7 @@ import org.apache.rocketmq.store.config.StorePathConfigHelper;
 
 public class ConsumeQueue {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
+    // 每条 ConsumeQueue 记录的大小
     public static final int CQ_STORE_UNIT_SIZE = 20;
     private static final InternalLogger LOG_ERROR = InternalLoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
 
@@ -482,13 +482,17 @@ public class ConsumeQueue {
             log.warn("Maybe try to build consume queue repeatedly maxPhysicOffset={} phyOffset={}", maxPhysicOffset, offset);
             return true;
         }
-
+        // flip（）方法将缓冲区从写模式切换到读模式
         this.byteBufferIndex.flip();
+        // 当前可读取的 ByteBuffer 最大的长度
         this.byteBufferIndex.limit(CQ_STORE_UNIT_SIZE);
+        // 物理偏移量 8 个字节
         this.byteBufferIndex.putLong(offset);
+        // 消息体长度 4 个字节
         this.byteBufferIndex.putInt(size);
+        // Tag hashcode 8 个字节
         this.byteBufferIndex.putLong(tagsCode);
-
+        // CQ_STORE_UNIT_SIZE 即为 20
         final long expectLogicOffset = cqOffset * CQ_STORE_UNIT_SIZE;
 
         MappedFile mappedFile = this.mappedFileQueue.getLastMappedFile(expectLogicOffset);
