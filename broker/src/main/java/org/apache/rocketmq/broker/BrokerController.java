@@ -895,6 +895,7 @@ public class BrokerController {
             this.registerBrokerAll(true, false, true);
         }
 
+        // 定时全量注册broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -906,7 +907,7 @@ public class BrokerController {
                     log.error("registerBrokerAll Exception", e);
                 }
             }
-        }, 1000 * 10 /* 首次执行时，延迟10s再执行 */, Math.max(10000, Math.min(brokerConfig.getRegisterNameServerPeriod(), 60000))/* 执行间隔 控制在10~60s之间*/, TimeUnit.MILLISECONDS);
+        }, 1000 * 10 /* 首次执行时，延迟10s再执行 */, Math.max(10000, Math.min(brokerConfig.getRegisterNameServerPeriod(), 60000))/* 执行间隔 控制在10~60s之间，默认30s */, TimeUnit.MILLISECONDS);
 
         if (this.brokerStatsManager != null) {
             this.brokerStatsManager.start();

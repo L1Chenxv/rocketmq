@@ -148,7 +148,7 @@ public class RouteInfoManager {
         try {
             try {
                 this.lock.writeLock().lockInterruptibly();
-
+                // 如果 clusterAddrTable 中不存在 clusterName，就新建一个； 如果存在，就获取 clusterName 对应的 brokerName 集合
                 Set<String> brokerNames = this.clusterAddrTable.computeIfAbsent(clusterName, k -> new HashSet<>());
                 brokerNames.add(brokerName);
 
@@ -156,6 +156,7 @@ public class RouteInfoManager {
 
                 BrokerData brokerData = this.brokerAddrTable.get(brokerName);
                 if (null == brokerData) {
+                    // 表明是首次注册, 第一次一定会走到这里来
                     registerFirst = true;
                     brokerData = new BrokerData(clusterName, brokerName, new HashMap<>());
                     this.brokerAddrTable.put(brokerName, brokerData);
@@ -171,7 +172,7 @@ public class RouteInfoManager {
                         it.remove();
                     }
                 }
-
+                // 将 brokerId 和 brokerAddr 放入 brokerData.brokerAddrs 中
                 String oldAddr = brokerData.getBrokerAddrs().put(brokerId, brokerAddr);
                 if (MixAll.MASTER_ID == brokerId) {
                     log.info("cluster [{}] brokerName [{}] master address change from {} to {}",
@@ -188,14 +189,17 @@ public class RouteInfoManager {
                                 topicConfigWrapper.getTopicConfigTable();
                         if (tcTable != null) {
                             for (Map.Entry<String, TopicConfig> entry : tcTable.entrySet()) {
+                                // 遍历这个 Map, 为此 Map 的所有 Topic 初始化 MessageQueue 的数据
                                 this.createAndUpdateQueueData(brokerName, entry.getValue());
                             }
                         }
                     }
                 }
 
+                // 更新 brokerLiveTable
                 BrokerLiveInfo prevBrokerLiveInfo = this.brokerLiveTable.put(brokerAddr,
                         new BrokerLiveInfo(
+                                // 更新心跳的时间戳
                                 System.currentTimeMillis(),
                                 topicConfigWrapper.getDataVersion(),
                                 channel,
@@ -253,6 +257,7 @@ public class RouteInfoManager {
     }
 
     private void createAndUpdateQueueData(final String brokerName, final TopicConfig topicConfig) {
+        // 根据 Broker 传过来的数据构建 MessageQueue 的数据
         QueueData queueData = new QueueData();
         queueData.setBrokerName(brokerName);
         queueData.setWriteQueueNums(topicConfig.getWriteQueueNums());
@@ -260,13 +265,16 @@ public class RouteInfoManager {
         queueData.setPerm(topicConfig.getPerm());
         queueData.setTopicSysFlag(topicConfig.getTopicSysFlag());
 
+        // 将 MessageQueue 的数据放入 topicQueueTable 中
         Map<String, QueueData> queueDataMap = this.topicQueueTable.get(topicConfig.getTopicName());
         if (null == queueDataMap) {
+            // 对于首次注册的 Topic 来说会走到这里, 并对 Map 的 Value queueDataMap 做了一个初始化
             queueDataMap = new HashMap<>();
             queueDataMap.put(queueData.getBrokerName(), queueData);
             this.topicQueueTable.put(topicConfig.getTopicName(), queueDataMap);
             log.info("new topic registered, {} {}", topicConfig.getTopicName(), queueData);
         } else {
+            // 这里最大的区别在于打的日志不同
             QueueData old = queueDataMap.put(queueData.getBrokerName(), queueData);
             if (old != null && !old.equals(queueData)) {
                 log.info("topic changed, {} OLD: {} NEW: {}", topicConfig.getTopicName(), old,
@@ -471,7 +479,9 @@ public class RouteInfoManager {
         while (it.hasNext()) {
             Entry<String, BrokerLiveInfo> next = it.next();
             long last = next.getValue().getLastUpdateTimestamp();
+            // 2分钟没有收到心跳包，就认为broker已经下线
             if ((last + BROKER_CHANNEL_EXPIRED_TIME) < System.currentTimeMillis()) {
+                // 关闭channel
                 RemotingUtil.closeChannel(next.getValue().getChannel());
                 it.remove();
                 log.warn("The broker channel expired, {} {}ms", next.getKey(), BROKER_CHANNEL_EXPIRED_TIME);
@@ -481,6 +491,7 @@ public class RouteInfoManager {
             }
         }
 
+        // 不理解 为什么不返回 void？
         return removeCount;
     }
 
