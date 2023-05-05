@@ -139,6 +139,13 @@ public class ConsumerOffsetManager extends ConfigManager {
         }
     }
 
+    /**
+     * 查询消息消费进度
+     * @param group Consumer Group
+     * @param topic Topic
+     * @param queueId MessageQueue ID
+     * @return offset
+     */
     public long queryOffset(final String group, final String topic, final int queueId) {
         // topic@group
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
