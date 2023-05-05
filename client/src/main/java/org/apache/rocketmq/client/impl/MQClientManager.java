@@ -45,6 +45,7 @@ public class MQClientManager {
     }
 
     public MQClientInstance getOrCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
+        // client = "ip" + "@" + "instanceName" + "@" + "unitName"
         String clientId = clientConfig.buildMQClientId();
         // 从这个 table 里先获取一次
         MQClientInstance instance = this.factoryTable.get(clientId);
