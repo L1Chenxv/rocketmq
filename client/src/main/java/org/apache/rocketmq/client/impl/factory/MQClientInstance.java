@@ -229,6 +229,7 @@ public class MQClientInstance {
                 case CREATE_JUST:
                     this.serviceState = ServiceState.START_FAILED;
                     // If not specified,looking address from name server
+                    // 如果没有指定 NameServer 地址，就从 NameServer 获取
                     if (null == this.clientConfig.getNamesrvAddr()) {
                         // 获取 NameServer 地址
                         this.mQClientAPIImpl.fetchNameServerAddr();
@@ -239,6 +240,7 @@ public class MQClientInstance {
                     // 启动定时任务 核心方法
                     this.startScheduledTask();
                     // Start pull service
+                    // PullMessageService 启动的线程会不停地从 Broker 拉取数据
                     this.pullMessageService.start();
                     // Start rebalance service
                     this.rebalanceService.start();
