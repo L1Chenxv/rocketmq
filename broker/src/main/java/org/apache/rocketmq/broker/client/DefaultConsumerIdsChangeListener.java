@@ -44,6 +44,8 @@ public class DefaultConsumerIdsChangeListener implements ConsumerIdsChangeListen
                 List<Channel> channels = (List<Channel>) args[0];
                 if (channels != null && brokerController.getBrokerConfig().isNotifyConsumerIdsChangedEnable()) {
                     for (Channel chl : channels) {
+                        // 这里 Broker 会向当前 Topic 下的所有 Consumer 发送一个 RequestCode 为 NOTIFY_CONSUMER_IDS_CHANGED 的请求，
+                        // 收到请求的 Consumer 会执行 Rebalance 的相关逻辑
                         this.brokerController.getBroker2Client().notifyConsumerIdsChanged(chl, group);
                     }
                 }

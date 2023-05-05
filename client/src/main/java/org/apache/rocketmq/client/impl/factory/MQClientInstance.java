@@ -293,6 +293,7 @@ public class MQClientInstance {
                 try {
                     // 发送心跳 清理离线的 Broker
                     MQClientInstance.this.cleanOfflineBroker();
+                    // 向所有 Broker 发送心跳
                     MQClientInstance.this.sendHeartbeatToAllBrokerWithLock();
                 } catch (Exception e) {
                     log.error("ScheduledTask sendHeartbeatToAllBroker exception", e);
@@ -662,12 +663,14 @@ public class MQClientInstance {
 
                             // Update sub info
                             if (!consumerTable.isEmpty()) {
+                                // 从 topicRouteData 当中提取 MessageQueue 的 Set
                                 Set<MessageQueue> subscribeInfo = topicRouteData2TopicSubscribeInfo(topic, topicRouteData);
                                 Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
                                 while (it.hasNext()) {
                                     Entry<String, MQConsumerInner> entry = it.next();
                                     MQConsumerInner impl = entry.getValue();
                                     if (impl != null) {
+                                        // 更新 MessageQueue
                                         impl.updateTopicSubscribeInfo(topic, subscribeInfo);
                                     }
                                 }
