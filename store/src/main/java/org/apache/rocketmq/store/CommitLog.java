@@ -390,6 +390,7 @@ public class CommitLog {
                         }
 
                         if (delayLevel > 0) {
+                            // 根据延迟等级, 计算当前 Message 应该被投递的时间戳
                             tagsCode = this.defaultMessageStore.getScheduleMessageService().computeDeliverTimestamp(delayLevel,
                                 storeTimestamp);
                         }
@@ -621,15 +622,18 @@ public class CommitLog {
         if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
                 || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
             // Delay Delivery
+            // 如果消息延迟级别大于0，那么就将消息的Topic设置为SCHEDULE_TOPIC_XXXX，队列ID设置为延迟级别对应的队列ID
             if (msg.getDelayTimeLevel() > 0) {
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel()) {
                     msg.setDelayTimeLevel(this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel());
                 }
 
                 topic = TopicValidator.RMQ_SYS_SCHEDULE_TOPIC;
+                // 延迟消息的队列ID为延迟级别减1 delayLevel-1
                 int queueId = ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel());
 
                 // Backup real topic, queueId
+                // 备份真实的Topic和队列ID
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_TOPIC, msg.getTopic());
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_QUEUE_ID, String.valueOf(msg.getQueueId()));
                 msg.setPropertiesString(MessageDecoder.messageProperties2String(msg.getProperties()));

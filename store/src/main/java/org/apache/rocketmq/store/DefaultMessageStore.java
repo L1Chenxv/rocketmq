@@ -1579,6 +1579,7 @@ public class DefaultMessageStore implements MessageStore {
             if (brokerRole == BrokerRole.SLAVE) {
                 this.scheduleMessageService.shutdown();
             } else {
+                // ...
                 this.scheduleMessageService.start();
             }
         }

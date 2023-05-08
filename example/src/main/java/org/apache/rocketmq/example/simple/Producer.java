@@ -37,6 +37,8 @@ public class Producer {
                         "TagA",
                         "OrderID188",
                         "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
+                    // 设置延迟等级3,这个消息将在10s之后发送(现在只支持固定的几个时间,详看delayTimeLevel)
+                    msg.setDelayTimeLevel(3);
                     SendResult sendResult = producer.send(msg);
                     System.out.printf("%s%n", sendResult);
                 }

@@ -26,6 +26,7 @@ public abstract class ConfigManager {
 
     public abstract String encode();
 
+    // 从文件中加载配置
     public boolean load() {
         String fileName = null;
         try {

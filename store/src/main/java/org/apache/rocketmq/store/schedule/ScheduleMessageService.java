@@ -132,6 +132,7 @@ public class ScheduleMessageService extends ConfigManager {
             if (this.enableAsyncDeliver) {
                 this.handleExecutorService = new ScheduledThreadPoolExecutor(this.maxDelayLevel, new ThreadFactoryImpl("ScheduleMessageExecutorHandleThread_"));
             }
+            // 对每个 delayLevel 获取消费进度，执行定时任务
             for (Map.Entry<Integer, Long> entry : this.delayLevelTable.entrySet()) {
                 Integer level = entry.getKey();
                 Long timeDelay = entry.getValue();
@@ -144,6 +145,7 @@ public class ScheduleMessageService extends ConfigManager {
                     if (this.enableAsyncDeliver) {
                         this.handleExecutorService.schedule(new HandlePutResultTask(level), FIRST_DELAY_TIME, TimeUnit.MILLISECONDS);
                     }
+                    // 每个 delayLevel 都有一个定时任务，用于在指定的时间后将指定偏移量的消息重新投递到消费队列中。
                     this.deliverExecutorService.schedule(new DeliverDelayedMessageTimerTask(level, offset), FIRST_DELAY_TIME, TimeUnit.MILLISECONDS);
                 }
             }
@@ -205,6 +207,7 @@ public class ScheduleMessageService extends ConfigManager {
         return this.encode(false);
     }
 
+    // 加载延迟队列的消费进度
     @Override
     public boolean load() {
         boolean result = super.load();
@@ -273,6 +276,7 @@ public class ScheduleMessageService extends ConfigManager {
         return delayOffsetSerializeWrapper.toJson(prettyFormat);
     }
 
+    // 解析延迟级别
     public boolean parseDelayLevel() {
         HashMap<String, Long> timeUnitTable = new HashMap<String, Long>();
         timeUnitTable.put("s", 1000L);
@@ -328,9 +332,9 @@ public class ScheduleMessageService extends ConfigManager {
 
         msgInner.setWaitStoreMsgOK(false);
         MessageAccessor.clearProperty(msgInner, MessageConst.PROPERTY_DELAY_TIME_LEVEL);
-
+        // 设置真实的topic
         msgInner.setTopic(msgInner.getProperty(MessageConst.PROPERTY_REAL_TOPIC));
-
+        // 拿到真实的 MessageQueueId
         String queueIdStr = msgInner.getProperty(MessageConst.PROPERTY_REAL_QUEUE_ID);
         int queueId = Integer.parseInt(queueIdStr);
         msgInner.setQueueId(queueId);
@@ -347,6 +351,7 @@ public class ScheduleMessageService extends ConfigManager {
             this.offset = offset;
         }
 
+        // 周期性检查队列中的 Message 是否已经到了指定的时间，如果已经到了则会将其取出来，“投递”到原来指定的 Topic 当中
         @Override
         public void run() {
             try {
@@ -376,6 +381,7 @@ public class ScheduleMessageService extends ConfigManager {
         }
 
         public void executeOnTimeup() {
+            // 根据 Topic 名称和经过 DelayTimeLevel 计算而来的 queueId 找到对应的 ConsumeQueue
             ConsumeQueue cq =
                 ScheduleMessageService.this.defaultMessageStore.findConsumeQueue(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC,
                     delayLevel2QueueId(delayLevel));
@@ -409,6 +415,7 @@ public class ScheduleMessageService extends ConfigManager {
                 for (; i < bufferCQ.getSize() && isStarted(); i += ConsumeQueue.CQ_STORE_UNIT_SIZE) {
                     long offsetPy = bufferCQ.getByteBuffer().getLong();
                     int sizePy = bufferCQ.getByteBuffer().getInt();
+                    // 记录延时消息的到期时间戳
                     long tagsCode = bufferCQ.getByteBuffer().getLong();
 
                     if (cq.isExtAddr(tagsCode)) {
@@ -423,12 +430,14 @@ public class ScheduleMessageService extends ConfigManager {
                         }
                     }
 
+                    // 判断某条 Message 是否到了该投递到指定 Topic 的时间
                     long now = System.currentTimeMillis();
+                    // deliverTimestamp = Message 存储时间 + 延迟投递时间
                     long deliverTimestamp = this.correctDeliverTimestamp(now, tagsCode);
                     nextOffset = offset + (i / ConsumeQueue.CQ_STORE_UNIT_SIZE);
 
                     long countdown = deliverTimestamp - now;
-                    if (countdown > 0) {
+                    if (countdown > 0) { // 如果还没到投递时间，继续延迟
                         this.scheduleNextTimerTask(nextOffset, DELAY_FOR_A_WHILE);
                         return;
                     }
@@ -446,6 +455,7 @@ public class ScheduleMessageService extends ConfigManager {
                     }
 
                     boolean deliverSuc;
+                    // 将消息存进指定的 Topic 当中
                     if (ScheduleMessageService.this.enableAsyncDeliver) {
                         deliverSuc = this.asyncDeliver(msgInner, msgExt.getMsgId(), nextOffset, offsetPy, sizePy);
                     } else {
@@ -464,10 +474,11 @@ public class ScheduleMessageService extends ConfigManager {
             } finally {
                 bufferCQ.release();
             }
-
+            // 链式调用
             this.scheduleNextTimerTask(nextOffset, DELAY_FOR_A_WHILE);
         }
 
+        // 链式调用 100ms 后执行下一次任务
         public void scheduleNextTimerTask(long offset, long delay) {
             ScheduleMessageService.this.deliverExecutorService.schedule(new DeliverDelayedMessageTimerTask(
                 this.delayLevel, offset), delay, TimeUnit.MILLISECONDS);
