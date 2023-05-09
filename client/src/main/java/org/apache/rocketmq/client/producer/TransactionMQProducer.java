@@ -57,7 +57,9 @@ public class TransactionMQProducer extends DefaultMQProducer {
 
     @Override
     public void start() throws MQClientException {
+        // 初始化事务消息的环境
         this.defaultMQProducerImpl.initTransactionEnv();
+        // 默认处理流程
         super.start();
     }
 
@@ -75,7 +77,7 @@ public class TransactionMQProducer extends DefaultMQProducer {
     @Deprecated
     public TransactionSendResult sendMessageInTransaction(final Message msg,
         final LocalTransactionExecuter tranExecuter, final Object arg) throws MQClientException {
-        if (null == this.transactionCheckListener) {
+        if (null == this.transactionCheckListener) { // 没有设置 transactionCheckListener 直接报错
             throw new MQClientException("localTransactionBranchCheckListener is null", null);
         }
 

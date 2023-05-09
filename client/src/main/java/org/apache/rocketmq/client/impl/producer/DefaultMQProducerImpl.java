@@ -153,6 +153,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     public void initTransactionEnv() {
         TransactionMQProducer producer = (TransactionMQProducer) this.defaultMQProducer;
+        // 设置线程池
         if (producer.getExecutorService() != null) {
             this.checkExecutor = producer.getExecutorService();
         } else {
@@ -560,6 +561,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             Exception exception = null;
             SendResult sendResult = null;
             // 默认是同步发送，重试次数为 2 次 总投递次数为 3 次（投递 1 次， 重试 2 次）
+            // 异步则总投递次数为 1 次
             int timesTotal = communicationMode == CommunicationMode.SYNC ? 1 + this.defaultMQProducer.getRetryTimesWhenSendFailed() : 1;
             int times = 0;
             String[] brokersSent = new String[timesTotal];
@@ -1246,6 +1248,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         }
 
         // ignore DelayTimeLevel parameter
+        // 忽略延迟消息的级别
         if (msg.getDelayTimeLevel() != 0) {
             MessageAccessor.clearProperty(msg, MessageConst.PROPERTY_DELAY_TIME_LEVEL);
         }
@@ -1253,6 +1256,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         Validators.checkMessage(msg, this.defaultMQProducer);
 
         SendResult sendResult = null;
+        // 标记消息为 Half Message  MessageConst.PROPERTY_TRANSACTION_PREPARED = true
         MessageAccessor.putProperty(msg, MessageConst.PROPERTY_TRANSACTION_PREPARED, "true");
         MessageAccessor.putProperty(msg, MessageConst.PROPERTY_PRODUCER_GROUP, this.defaultMQProducer.getProducerGroup());
         try {
@@ -1277,6 +1281,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                         localTransactionState = localTransactionExecuter.executeLocalTransactionBranch(msg, arg);
                     } else if (transactionListener != null) {
                         log.debug("Used new transaction API");
+                        // 如果设置了 transactionListener, 这里会通过 listener 来执行本地事务
                         localTransactionState = transactionListener.executeLocalTransaction(msg, arg);
                     }
                     if (null == localTransactionState) {
@@ -1304,6 +1309,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         }
 
         try {
+            // 给事务消息的流程收尾 -> 向 Broker 发送一个 RequestCode 为 END_TRANSACTION 的请求
             this.endTransaction(msg, sendResult, localTransactionState, localException);
         } catch (Exception e) {
             log.warn("local transaction execute " + localTransactionState + ", but end broker transaction failed", e);

@@ -63,9 +63,9 @@ public class EndTransactionProcessor extends AsyncNettyRequestProcessor implemen
             return response;
         }
 
-        if (requestHeader.getFromTransactionCheck()) {
+        if (requestHeader.getFromTransactionCheck()) { // true 代表当前操作是事务回查
             switch (requestHeader.getCommitOrRollback()) {
-                case MessageSysFlag.TRANSACTION_NOT_TYPE: {
+                case MessageSysFlag.TRANSACTION_NOT_TYPE: { // 对应 LocalTransactionState.UNKNOW
                     LOGGER.warn("Check producer[{}] transaction state, but it's pending status."
                             + "RequestHeader: {} Remark: {}",
                         RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
@@ -95,7 +95,7 @@ public class EndTransactionProcessor extends AsyncNettyRequestProcessor implemen
                 default:
                     return null;
             }
-        } else {
+        } else { // false 是发送完 Half Message 产生的调用
             switch (requestHeader.getCommitOrRollback()) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE: {
                     LOGGER.warn("The producer[{}] end transaction in sending message,  and it's pending status."
@@ -124,18 +124,23 @@ public class EndTransactionProcessor extends AsyncNettyRequestProcessor implemen
         }
         OperationResult result = new OperationResult();
         if (MessageSysFlag.TRANSACTION_COMMIT_TYPE == requestHeader.getCommitOrRollback()) {
+            // 通过 TransactionalMessageService 的 commitMessage 方法提交 Half Message
             result = this.brokerController.getTransactionalMessageService().commitMessage(requestHeader);
             if (result.getResponseCode() == ResponseCode.SUCCESS) {
                 RemotingCommand res = checkPrepareMessage(result.getPrepareMessage(), requestHeader);
                 if (res.getCode() == ResponseCode.SUCCESS) {
+                    // 通过 endMessageTransaction 构建正式需要投递的 Message
                     MessageExtBrokerInner msgInner = endMessageTransaction(result.getPrepareMessage());
                     msgInner.setSysFlag(MessageSysFlag.resetTransactionValue(msgInner.getSysFlag(), requestHeader.getCommitOrRollback()));
                     msgInner.setQueueOffset(requestHeader.getTranStateTableOffset());
                     msgInner.setPreparedTransactionOffset(requestHeader.getCommitLogOffset());
                     msgInner.setStoreTimestamp(result.getPrepareMessage().getStoreTimestamp());
+                    // 清除掉 Half Message 的标记, 这代表这是一个正常的 Message 了
                     MessageAccessor.clearProperty(msgInner, MessageConst.PROPERTY_TRANSACTION_PREPARED);
+                    // 将 Message 投递到真正的 Topic 中，让消费者能够消费到
                     RemotingCommand sendResult = sendFinalMessage(msgInner);
                     if (sendResult.getCode() == ResponseCode.SUCCESS) {
+                        // 将 Half Message 删除
                         this.brokerController.getTransactionalMessageService().deletePrepareMessage(result.getPrepareMessage());
                     }
                     return sendResult;
@@ -192,6 +197,11 @@ public class EndTransactionProcessor extends AsyncNettyRequestProcessor implemen
         return response;
     }
 
+    /**
+     * Half Message 转换为正式的 Message
+     * @param msgExt
+     * @return
+     */
     private MessageExtBrokerInner endMessageTransaction(MessageExt msgExt) {
         MessageExtBrokerInner msgInner = new MessageExtBrokerInner();
         msgInner.setTopic(msgExt.getUserProperty(MessageConst.PROPERTY_REAL_TOPIC));
@@ -219,6 +229,7 @@ public class EndTransactionProcessor extends AsyncNettyRequestProcessor implemen
 
     private RemotingCommand sendFinalMessage(MessageExtBrokerInner msgInner) {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
+        // 调用 MessageStore#putMessage 方法将 Message 存储到 CommitLog 中
         final PutMessageResult putMessageResult = this.brokerController.getMessageStore().putMessage(msgInner);
         if (putMessageResult != null) {
             switch (putMessageResult.getPutMessageStatus()) {

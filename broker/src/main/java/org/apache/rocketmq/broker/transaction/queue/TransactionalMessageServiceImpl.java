@@ -62,6 +62,7 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
 
     @Override
     public CompletableFuture<PutMessageResult> asyncPrepareMessage(MessageExtBrokerInner messageInner) {
+        // 持久化message
         return transactionalMessageBridge.asyncPutHalfMessage(messageInner);
     }
 
@@ -452,6 +453,7 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
 
     private OperationResult getHalfMessageByOffset(long commitLogOffset) {
         OperationResult response = new OperationResult();
+        // 根据传入的 Offset 将对应的 Half Message 取出来
         MessageExt messageExt = this.transactionalMessageBridge.lookMessageByOffset(commitLogOffset);
         if (messageExt != null) {
             response.setPrepareMessage(messageExt);
