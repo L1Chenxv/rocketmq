@@ -383,6 +383,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 doExecuteEndTransactionHook(msg, uniqueKey, brokerAddr, localTransactionState, true);
 
                 try {
+                    // 向 Broker 发送 RequestCode 为 END_TRANSACTION 的请求
                     DefaultMQProducerImpl.this.mQClientFactory.getMQClientAPIImpl().endTransactionOneway(brokerAddr, thisHeader, remark,
                             3000);
                 } catch (Exception e) {

@@ -169,6 +169,7 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
                         Long removedOpOffset = removeMap.remove(i);
                         doneOpOffset.add(removedOpOffset);
                     } else {
+                        // 从half消息队列中获取消息
                         GetResult getResult = getHalfMsg(messageQueue, i);
                         MessageExt msgExt = getResult.getMsg();
                         if (msgExt == null) {
@@ -187,8 +188,10 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
                                 continue;
                             }
                         }
-
-                        if (needDiscard(msgExt, transactionCheckMax) || needSkip(msgExt)) {
+                        // 判断是否需要将其丢弃、是否需要跳过
+                        if (needDiscard(msgExt, transactionCheckMax) /* 是否超过检查次数最大值 */
+                            || needSkip(msgExt) /* 是否超过了 Message 保存的上限（3天） */) {
+                            // 丢弃消息
                             listener.resolveDiscardMsg(msgExt);
                             newOffset = i + 1;
                             i++;
@@ -225,6 +228,7 @@ public class TransactionalMessageServiceImpl implements TransactionalMessageServ
                             || (valueOfCurrentMinusBorn <= -1);
 
                         if (isNeedCheck) {
+                            // putBackHalfMsgQueue() 会将当前 Message 再次投递进事务消息专用队列当中
                             if (!putBackHalfMsgQueue(msgExt, i)) {
                                 continue;
                             }

@@ -48,7 +48,10 @@ public class TransactionalMessageCheckService extends ServiceThread {
 
     @Override
     protected void onWaitEnd() {
+        // Half Message 被投递进 Topic 后超过了 timeout 所代表的时间，才能够执行检查逻辑
         long timeout = brokerController.getBrokerConfig().getTransactionTimeOut();
+        // Half Message 被检查的最大次数
+        // 如果有 Half Message 对应的事务一直没有结果，那么等达到了最大的检查次数之后就会将此 Half Message 给删除
         int checkMax = brokerController.getBrokerConfig().getTransactionCheckMax();
         long begin = System.currentTimeMillis();
         log.info("Begin to check prepare message, begin time:{}", begin);
