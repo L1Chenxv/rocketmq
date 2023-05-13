@@ -1,3 +1,8 @@
+# RocketMQ 源码梳理
+- 此 fork 仅用作源码原理学习
+- 学习分支：**mq_learning-doc**
+## 章节安排
+————————————————————————————————————————————————————
 ## Apache RocketMQ 
 [![Build Status](https://travis-ci.org/apache/rocketmq.svg?branch=master)](https://travis-ci.org/apache/rocketmq) [![Coverage Status](https://coveralls.io/repos/github/apache/rocketmq/badge.svg?branch=master)](https://coveralls.io/github/apache/rocketmq?branch=master)
 [![CodeCov](https://codecov.io/gh/apache/rocketmq/branch/master/graph/badge.svg)](https://codecov.io/gh/apache/rocketmq)
