@@ -921,6 +921,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         byte[] body = msg.getBody();
         if (body != null) {
             // If the original body length is more than 4KB and it is not a wrapper message, try to compress it.
+            // 只有消息体大于 compressMsgBodyOverHowmuch 时才进行压缩 默认 4k
             if (body.length >= this.defaultMQProducer.getCompressMsgBodyOverHowmuch()) {
                 try {
                     byte[] data = compressor.compress(body, compressLevel);

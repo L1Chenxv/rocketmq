@@ -67,7 +67,7 @@ public class TopicPublishInfo {
     }
 
     public MessageQueue selectOneMessageQueue(final String lastBrokerName) {
-        if (lastBrokerName == null) { // lastBrokerName 只会在重试的时候才会有值
+        if (lastBrokerName == null) { // lastBrokerName 只会在重试的时候才会有值，第一次发送消息的时候是没有值的
             return selectOneMessageQueue();
         } else {
             for (int i = 0; i < this.messageQueueList.size(); i++) {

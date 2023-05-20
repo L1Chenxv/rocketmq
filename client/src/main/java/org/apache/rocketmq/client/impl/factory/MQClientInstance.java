@@ -237,7 +237,7 @@ public class MQClientInstance {
                     // Start request-response channel
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
-                    // 启动定时任务 核心方法
+                    // 启动多个定时任务 核心方法
                     this.startScheduledTask();
                     // Start pull service
                     // PullMessageService 启动的线程会不停地从 Broker 拉取数据
@@ -259,6 +259,7 @@ public class MQClientInstance {
     }
 
     private void startScheduledTask() {
+        // 如果没有指定 NameServer 地址，就定时从 NameServer 获取
         if (null == this.clientConfig.getNamesrvAddr()) {
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
@@ -272,7 +273,10 @@ public class MQClientInstance {
                 }
             }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);
         }
-
+        // 从 NameServer 定时查询更新 Topic 路由信息
+        // 这里是批量地运行。即 MQClientInstance 在运行这部分更新数据的逻辑是不会关心是 Producer 还是 Consumer，
+        // 它会从两个 Table 中解析出所有的 Topic 的列表，然后批量地去 NameServer 更新数据，
+        // 因为无论是 Producer 还是 Consumer 都需要使用到这些元数据。
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -286,6 +290,7 @@ public class MQClientInstance {
             }
         }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);
 
+        // broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -301,6 +306,7 @@ public class MQClientInstance {
             }
         }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);
 
+        // 持久化 offset（如果是 Consumer 的话）
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
