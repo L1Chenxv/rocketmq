@@ -161,7 +161,7 @@ public class DefaultMessageStore implements MessageStore {
         if (messageStoreConfig.isTransientStorePoolEnable()) {
             this.transientStorePool.init();
         }
-
+        // 启动一个线程任务
         this.allocateMappedFileService.start();
 
         this.indexService.start();
@@ -297,6 +297,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         this.flushConsumeQueueService.start();
+        // 启动定时任务，定期将内存中的数据持久化到磁盘
         this.commitLog.start();
         this.storeStatsService.start();
 

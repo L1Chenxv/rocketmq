@@ -856,6 +856,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                         if (timeout < costTimeSync) {
                             throw new RemotingTooMuchRequestException("sendKernelImpl call timeout");
                         }
+                        // 发送消息
                         sendResult = this.mQClientFactory.getMQClientAPIImpl().sendMessage(
                                 brokerAddr,
                                 mq.getBrokerName(),

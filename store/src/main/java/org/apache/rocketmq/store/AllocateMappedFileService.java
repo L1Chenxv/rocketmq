@@ -144,7 +144,6 @@ public class AllocateMappedFileService extends ServiceThread {
 
     /**
      * 自产自销 异步解耦
-     * Only interrupted by the external thread, will return false
      * 只有被外部线程中断，才会返回false
      * @return true if success, false if interrupted
      */

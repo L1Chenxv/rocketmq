@@ -241,6 +241,7 @@ public class BrokerController {
     }
 
     public boolean initialize() throws CloneNotSupportedException {
+        // 加载 topicConfigManager
         boolean result = this.topicConfigManager.load();
 
         // 加载consumerOffsetManager、subscriptionGroupManager、consumerFilterManager 每个Manager对应磁盘上的一个文件
@@ -250,6 +251,7 @@ public class BrokerController {
 
         if (result) {
             try {
+                // 实例化 MessageStore
                 this.messageStore =
                     new DefaultMessageStore(this.messageStoreConfig, this.brokerStatsManager, this.messageArrivingListener,
                         this.brokerConfig);
@@ -349,7 +351,7 @@ public class BrokerController {
             this.consumerManageExecutor =
                 Executors.newFixedThreadPool(this.brokerConfig.getConsumerManageThreadPoolNums(), new ThreadFactoryImpl(
                     "ConsumerManageThread_"));
-
+            // 注册 processor
             this.registerProcessor();
 
             final long initialDelay = UtilAll.computeNextMorningTimeMillis() - System.currentTimeMillis();
@@ -858,6 +860,7 @@ public class BrokerController {
 
     public void start() throws Exception {
         if (this.messageStore != null) {
+            // 启动 MessageStore
             this.messageStore.start();
         }
 

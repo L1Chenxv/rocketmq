@@ -82,6 +82,13 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         return response;
     }
 
+    /**
+     * 处理 Producer 发送的请求
+     * @param ctx
+     * @param request
+     * @param responseCallback
+     * @throws Exception
+     */
     @Override
     public void asyncProcessRequest(ChannelHandlerContext ctx, RemotingCommand request, RemotingResponseCallback responseCallback) throws Exception {
         // 异步处理是 Broker 内部处理消息的方式

@@ -230,6 +230,7 @@ public class MappedFileQueue {
         // /Users/leonsh/rocketmqnamesrv/data/commitlog/00000000001073741824
         String nextNextFilePath = this.storePath + File.separator + UtilAll.offset2FileName(createOffset
                 + this.mappedFileSize);
+        // 创建 MappedFile 和 下一个 MappedFile
         return doCreateMappedFile(nextFilePath, nextNextFilePath);
     }
 
@@ -452,10 +453,13 @@ public class MappedFileQueue {
 
     public boolean flush(final int flushLeastPages) {
         boolean result = true;
+        // 根据 offset 查找 MappedFile
         MappedFile mappedFile = this.findMappedFileByOffset(this.flushedWhere, this.flushedWhere == 0);
         if (mappedFile != null) {
             long tmpTimeStamp = mappedFile.getStoreTimestamp();
+            // 返回刷盘后的最新 offset
             int offset = mappedFile.flush(flushLeastPages);
+            // 该文件的的起始偏移量 + 刷盘后的最新 offset = 下次刷盘的起始偏移量
             long where = mappedFile.getFileFromOffset() + offset;
             result = where == this.flushedWhere;
             this.flushedWhere = where;
